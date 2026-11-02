@@ -1,13 +1,15 @@
 package com.college.portal.controller;
 
-import java.util.List;
-
+import dto.StudentRequestDTO;
+import dto.StudentResponseDTO;
+import com.college.portal.service.StudentService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.college.portal.model.Student;
-import com.college.portal.service.StudentService;
-
-import lombok.RequiredArgsConstructor;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/students")
@@ -16,39 +18,49 @@ public class StudentController {
 
     private final StudentService studentService;
 
-    // 1. Add a student
     @PostMapping
-    public Student addStudent(@RequestBody Student student) {
-        return studentService.addStudent(student);
+    public ResponseEntity<StudentResponseDTO> addStudent(@Valid @RequestBody StudentRequestDTO requestDTO) {
+        return new ResponseEntity<>(studentService.addStudent(requestDTO), HttpStatus.CREATED);
     }
 
-    // 2. Get all students
     @GetMapping
-    public List<Student> getAllStudents() {
-        return studentService.getAllStudents();
+    public ResponseEntity<List<StudentResponseDTO>> getAllStudents() {
+        return ResponseEntity.ok(studentService.getAllStudents());
     }
 
-    // 3. Get student by ID
     @GetMapping("/{id}")
-    public Student getStudentById(@PathVariable String id) {
-        return studentService.getStudentById(id);
+    public ResponseEntity<StudentResponseDTO> getStudentById(@PathVariable String id) {
+        return ResponseEntity.ok(studentService.getStudentById(id));
     }
 
-    // 4. Update student
     @PutMapping("/{id}")
-    public Student updateStudent(
-            @PathVariable String id,
-            @RequestBody Student student) {
-
-        return studentService.updateStudent(id, student);
+    public ResponseEntity<StudentResponseDTO> updateStudent(
+            @PathVariable String id, 
+            @Valid @RequestBody StudentRequestDTO requestDTO) {
+        return ResponseEntity.ok(studentService.updateStudent(id, requestDTO));
     }
 
-    // 5. Delete student
     @DeleteMapping("/{id}")
-    public String deleteStudent(@PathVariable String id) {
-
+    public ResponseEntity<Void> deleteStudent(@PathVariable String id) {
         studentService.deleteStudent(id);
+        return ResponseEntity.noContent().build();
+    }
 
-        return "Student deleted successfully";
+    @GetMapping("/search/usn/{usn}")
+    public ResponseEntity<StudentResponseDTO> searchByUsn(@PathVariable String usn) {
+        return ResponseEntity.ok(studentService.searchByUsn(usn));
+    }
+
+    @GetMapping("/search/name")
+    public ResponseEntity<List<StudentResponseDTO>> searchByName(@RequestParam String name) {
+        return ResponseEntity.ok(studentService.searchByName(name));
+    }
+
+    @GetMapping("/filter")
+    public ResponseEntity<List<StudentResponseDTO>> filterStudents(
+            @RequestParam String department,
+            @RequestParam Integer semester,
+            @RequestParam String section) {
+        return ResponseEntity.ok(studentService.filterStudents(department, semester, section));
     }
 }

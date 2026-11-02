@@ -1,14 +1,15 @@
-
 package com.college.portal.service;
 
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-
+import dto.StudentRequestDTO;
+import dto.StudentResponseDTO;
 import com.college.portal.model.Student;
 import com.college.portal.repository.StudentRepository;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -16,55 +17,76 @@ public class StudentService {
 
     private final StudentRepository studentRepository;
 
-    // 1. Add a new student
-    public Student addStudent(Student student) {
+    public StudentResponseDTO addStudent(StudentRequestDTO requestDTO) {
+        if (studentRepository.existsByUsn(requestDTO.getUsn())) {
+            throw new RuntimeException("USN already exists: " + requestDTO.getUsn());
+        }
+        
+        Student student = new Student();
+        BeanUtils.copyProperties(requestDTO, student);
+        
+        Student savedStudent = studentRepository.save(student);
+        return mapToResponseDTO(savedStudent);
+    }
 
-        if (studentRepository.existsByUsn(student.getUsn())) {
-            throw new RuntimeException("Student with this USN already exists");
+    public List<StudentResponseDTO> getAllStudents() {
+        return studentRepository.findAll()
+                .stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    public StudentResponseDTO getStudentById(String id) {
+        Student student = studentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Student not found with ID: " + id));
+        return mapToResponseDTO(student);
+    }
+
+    public StudentResponseDTO updateStudent(String id, StudentRequestDTO requestDTO) {
+        Student existingStudent = studentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Student not found with ID: " + id));
+
+        // Check if updating USN to one that already belongs to another student
+        if (!existingStudent.getUsn().equals(requestDTO.getUsn()) && 
+            studentRepository.existsByUsn(requestDTO.getUsn())) {
+            throw new RuntimeException("USN already exists: " + requestDTO.getUsn());
         }
 
-        return studentRepository.save(student);
+        BeanUtils.copyProperties(requestDTO, existingStudent);
+        Student updatedStudent = studentRepository.save(existingStudent);
+        return mapToResponseDTO(updatedStudent);
     }
 
-    // 2. Get all students
-    public List<Student> getAllStudents() {
-        return studentRepository.findAll();
-    }
-
-    // 3. Get student by ID
-    public Student getStudentById(String id) {
-
-        return studentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
-    }
-
-    // 4. Update student details
-    public Student updateStudent(String id, Student updatedStudent) {
-
-        Student existingStudent = getStudentById(id);
-
-        // Check if the new USN belongs to another student
-        if (!existingStudent.getUsn().equals(updatedStudent.getUsn())
-                && studentRepository.existsByUsn(updatedStudent.getUsn())) {
-            throw new RuntimeException("USN already exists");
-        }
-
-        existingStudent.setUsn(updatedStudent.getUsn());
-        existingStudent.setName(updatedStudent.getName());
-        existingStudent.setEmail(updatedStudent.getEmail());
-        existingStudent.setDepartment(updatedStudent.getDepartment());
-        existingStudent.setSemester(updatedStudent.getSemester());
-        existingStudent.setSection(updatedStudent.getSection());
-        existingStudent.setPhone(updatedStudent.getPhone());
-
-        return studentRepository.save(existingStudent);
-    }
-
-    // 5. Delete student
     public void deleteStudent(String id) {
+        if (!studentRepository.existsById(id)) {
+            throw new RuntimeException("Student not found with ID: " + id);
+        }
+        studentRepository.deleteById(id);
+    }
 
-        Student student = getStudentById(id);
+    public StudentResponseDTO searchByUsn(String usn) {
+        Student student = studentRepository.findByUsn(usn)
+                .orElseThrow(() -> new RuntimeException("Student not found with USN: " + usn));
+        return mapToResponseDTO(student);
+    }
 
-        studentRepository.deleteById(student.getId());
+    public List<StudentResponseDTO> searchByName(String name) {
+        return studentRepository.findByNameContainingIgnoreCase(name)
+                .stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<StudentResponseDTO> filterStudents(String department, Integer semester, String section) {
+        return studentRepository.findByDepartmentAndSemesterAndSection(department, semester, section)
+                .stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    private StudentResponseDTO mapToResponseDTO(Student student) {
+        StudentResponseDTO dto = new StudentResponseDTO();
+        BeanUtils.copyProperties(student, dto);
+        return dto;
     }
 }
