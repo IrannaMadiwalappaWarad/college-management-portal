@@ -12,4 +12,6 @@ public interface AttendanceRepository extends MongoRepository<Attendance, String
     List<Attendance> findByUsn(String usn);
     List<Attendance> findByDate(LocalDate date);
     boolean existsByStudentIdAndDateAndSubject(String studentId, LocalDate date, String subject);
+    long countByDate(LocalDate date);
+    long countByDateAndStatus(LocalDate date, String status);
 }

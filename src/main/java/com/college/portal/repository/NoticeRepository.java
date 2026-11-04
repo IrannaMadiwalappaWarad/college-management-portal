@@ -11,4 +11,5 @@ import java.util.List;
 public interface NoticeRepository extends MongoRepository<Notice, String> {
     List<Notice> findByStatusAndExpiryDateAfterOrderByPublishDateDesc(String status, LocalDateTime currentDate);
     List<Notice> findByCategoryAndAudience(String category, String audience);
+    long countByStatusAndExpiryDateAfter(String status, LocalDateTime currentDate);
 }
