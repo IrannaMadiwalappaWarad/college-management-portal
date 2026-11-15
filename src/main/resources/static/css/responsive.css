@@ -1,0 +1,53 @@
+
+@media (max-width: 992px) {
+    .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+    }
+    
+    .sidebar.show {
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+    }
+
+    /* Mobile Hamburger Menu */
+    .mobile-nav-toggle {
+        display: block !important;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--text-main);
+    }
+
+    .topbar {
+        padding: 0 1rem;
+    }
+    
+    .search-bar {
+        width: 200px;
+    }
+}
+
+@media (min-width: 993px) {
+    .mobile-nav-toggle {
+        display: none !important;
+    }
+}
+
+/* Adjustments for smaller mobile screens */
+@media (max-width: 576px) {
+    .search-bar {
+        display: none; /* Hide search bar on very small screens to save space */
+    }
+    .stat-card {
+        padding: 1rem;
+    }
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.25rem;
+    }
+}

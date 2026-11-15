@@ -33,11 +33,19 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll() // Open login/register
-                .requestMatchers(HttpMethod.GET, "/api/notices/active").permitAll() // Public notices
+                // Allow static frontend resources to load without a token
+                .requestMatchers("/", "/*.html", "/pages/**", "/css/**", "/js/**", "/assets/**").permitAll()
+                
+                // Allow auth API and public notices
+                .requestMatchers("/api/auth/**").permitAll() 
+                .requestMatchers(HttpMethod.GET, "/api/notices/active").permitAll() 
+                
+                // Secure API endpoints based on roles
                 .requestMatchers("/api/dashboard/**").hasAuthority("ROLE_ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/students/**", "/api/faculty/**").hasAuthority("ROLE_ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/attendance/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_FACULTY")
+                
+                // Require authentication for all other API requests
                 .anyRequest().authenticated()
             )
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
